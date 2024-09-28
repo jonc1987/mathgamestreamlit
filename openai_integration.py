@@ -55,7 +55,7 @@ def generate_math_question_modelfarm(topic: str, question_request: str = '') -> 
 def validate_answer(question: str, correct_answer: str, alternative_answers: list, user_answer: str) -> bool:
     model = ChatModel('chat-bison')
     context = 'You are a math teacher evaluating student answers. Consider alternative correct formats and minor spelling mistakes.'
-    user_message = f'Question: {question}\nCorrect answer: {correct_answer}\nAlternative answers: {", ".join(alternative_answers)}\nStudent answer: {user_answer}\nIs the student's answer correct? Respond with only "Yes" or "No".'
+    user_message = f"Question: {question}\nCorrect answer: {correct_answer}\nAlternative answers: {', '.join(alternative_answers)}\nStudent answer: {user_answer}\nIs the student's answer correct? Respond with only 'Yes' or 'No'."
     
     response = model.chat([
         ChatSession(
