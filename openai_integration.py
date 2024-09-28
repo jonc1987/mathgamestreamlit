@@ -7,7 +7,7 @@ def generate_math_question(topic: str, question_request: str = "") -> dict:
 def generate_math_question_modelfarm(topic: str, question_request: str = "") -> dict:
     model = ChatModel("chat-bison")
     
-    context = f"You are a math teacher generating {topic} questions for a quiz. Provide a question and its answer in a dictionary format with 'question' and 'answer' keys."
+    context = f"You are a math teacher generating {topic} questions for a quiz. The topics include Addition, Subtraction, Multiplication, Division, Algebra, Geometry, Greatest Common Factor, Least Common Multiple, Fractions, Decimals, Percentages, Exponents, Square Roots, and Order of Operations. Provide a question and its answer in a dictionary format with 'question' and 'answer' keys."
     
     if question_request:
         user_message = f"Generate a {topic} math question about {question_request}"
@@ -21,6 +21,10 @@ def generate_math_question_modelfarm(topic: str, question_request: str = "") -> 
                 ChatExample(
                     input=ChatMessage(content="Generate an addition question"),
                     output=ChatMessage(content="{'question': 'What is 15 + 27?', 'answer': '42'}")
+                ),
+                ChatExample(
+                    input=ChatMessage(content="Generate a Greatest Common Factor question"),
+                    output=ChatMessage(content="{'question': 'What is the Greatest Common Factor of 48 and 60?', 'answer': '12'}")
                 )
             ],
             messages=[

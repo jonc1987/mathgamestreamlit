@@ -20,7 +20,7 @@ st.set_page_config(page_title="AI Math Quiz", page_icon="assets/math_icon.svg")
 st.title("AI-Powered Math Quiz")
 
 # Topic selection
-topics = ["Addition", "Subtraction", "Multiplication", "Division", "Algebra", "Geometry"]
+topics = ['Addition', 'Subtraction', 'Multiplication', 'Division', 'Algebra', 'Geometry', 'Greatest Common Factor', 'Least Common Multiple', 'Fractions', 'Decimals', 'Percentages', 'Exponents', 'Square Roots', 'Order of Operations']
 selected_topic = st.selectbox("Select a math topic:", topics)
 
 # New text input for specific question request
