@@ -23,9 +23,12 @@ st.title("AI-Powered Math Quiz")
 topics = ["Addition", "Subtraction", "Multiplication", "Division", "Algebra", "Geometry"]
 selected_topic = st.selectbox("Select a math topic:", topics)
 
+# New text input for specific question request
+question_request = st.text_input("Specify the type of question you want (optional):")
+
 # Generate question button
 if st.button("Generate Question"):
-    question = generate_math_question(selected_topic)
+    question = generate_math_question(selected_topic, question_request)
     st.session_state.current_question = question
     st.write(f"Question: {question['question']}")
 
@@ -59,9 +62,10 @@ if st.button("Reset Scores"):
 st.sidebar.header("How to Play")
 st.sidebar.write("""
 1. Select a math topic from the dropdown menu.
-2. Click 'Generate Question' to get a new question.
-3. Type your answer in the text box.
-4. Click 'Check Answer' to see if you're correct.
-5. Your score will be updated automatically.
-6. Use 'Reset Scores' to start over.
+2. (Optional) Specify the type of question you want.
+3. Click 'Generate Question' to get a new question.
+4. Type your answer in the text box.
+5. Click 'Check Answer' to see if you're correct.
+6. Your score will be updated automatically.
+7. Use 'Reset Scores' to start over.
 """)
