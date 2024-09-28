@@ -52,7 +52,7 @@ if not st.session_state.quiz_mode:
             st.session_state.current_question_index = 0
             st.session_state.quiz_score = 0
             st.session_state.quiz_mode = True
-            st.experimental_rerun()
+            st.rerun()
 
     # Answer input for single question mode
     user_answer = st.text_input("Your answer:")
@@ -92,13 +92,13 @@ else:
                     st.write(f"Quiz completed! Your score: {st.session_state.quiz_score}/{len(st.session_state.quiz_questions)}")
                     st.session_state.score_tracker.add_score(selected_topic, st.session_state.quiz_score == len(st.session_state.quiz_questions))
                     st.session_state.quiz_mode = False
-                st.experimental_rerun()
+                st.rerun()
         with col2:
             if st.button("End Quiz"):
                 st.write(f"Quiz ended. Your score: {st.session_state.quiz_score}/{st.session_state.current_question_index}")
                 st.session_state.score_tracker.add_score(selected_topic, st.session_state.quiz_score == st.session_state.current_question_index)
                 st.session_state.quiz_mode = False
-                st.experimental_rerun()
+                st.rerun()
 
 # Display score
 st.subheader("Your Score")
