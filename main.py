@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 import os
-from openai_integration import generate_math_question
+from openai_integration import generate_math_question, validate_answer
 from score_tracker import ScoreTracker
 
 # Check for OpenAI API key
@@ -39,7 +39,9 @@ user_answer = st.text_input("Your answer:")
 if st.button("Check Answer"):
     if 'current_question' in st.session_state:
         correct_answer = st.session_state.current_question['answer']
-        if user_answer.strip().lower() == str(correct_answer).lower():
+        alternative_answers = st.session_state.current_question['alternative_answers']
+        question = st.session_state.current_question['question']
+        if validate_answer(question, correct_answer, alternative_answers, user_answer):
             st.success("Correct! Well done!")
             st.session_state.score_tracker.add_score(selected_topic, True)
         else:
