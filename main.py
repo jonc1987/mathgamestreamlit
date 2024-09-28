@@ -3,6 +3,7 @@ import pandas as pd
 import os
 from openai_integration import generate_math_question, validate_answer
 from score_tracker import ScoreTracker
+from question_cache import QuestionCache
 
 # Check for OpenAI API key
 if not os.environ.get("OPENAI_API_KEY"):
@@ -22,6 +23,8 @@ if 'quiz_mode' not in st.session_state:
     st.session_state.quiz_mode = False
 if 'attempt' not in st.session_state:
     st.session_state.attempt = 1
+if 'question_cache' not in st.session_state:
+    st.session_state.question_cache = QuestionCache()
 
 # Set page config
 st.set_page_config(page_title="AI Math Quiz", page_icon="assets/math_icon.svg")
@@ -39,13 +42,18 @@ selected_difficulty = st.selectbox("Select difficulty level:", difficulties)
 
 # Start Quiz button
 if st.button("Start Quiz"):
-    unique_questions = set()
-    while len(unique_questions) < 5:
-        question = generate_math_question(selected_topic, selected_difficulty.lower())
-        question_key = (question['question'], question['answer'])
-        if question_key not in unique_questions:
-            unique_questions.add(question_key)
-    st.session_state.quiz_questions = list(unique_questions)
+    cached_questions = st.session_state.question_cache.get_questions(selected_topic, selected_difficulty.lower(), 5)
+    if cached_questions:
+        st.session_state.quiz_questions = cached_questions
+    else:
+        unique_questions = set()
+        while len(unique_questions) < 5:
+            question = generate_math_question(selected_topic, selected_difficulty.lower())
+            question_key = (question['question'], question['answer'])
+            if question_key not in unique_questions:
+                unique_questions.add(question_key)
+                st.session_state.question_cache.add_question(selected_topic, selected_difficulty.lower(), question)
+        st.session_state.quiz_questions = list(unique_questions)
     st.session_state.current_question_index = 0
     st.session_state.quiz_score = 0
     st.session_state.quiz_mode = True
@@ -113,3 +121,11 @@ st.sidebar.write("""
 7. Your score will be updated automatically.
 8. Use 'Reset Scores' to start over.
 """)
+
+# Background question generation
+if not st.session_state.quiz_mode:
+    for topic in topics:
+        for difficulty in difficulties:
+            if len(st.session_state.question_cache.cache.get((topic, difficulty.lower()), [])) < 20:
+                question = generate_math_question(topic, difficulty.lower())
+                st.session_state.question_cache.add_question(topic, difficulty.lower(), question)
