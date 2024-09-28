@@ -35,70 +35,40 @@ selected_topic = st.selectbox("Select a math topic:", topics)
 difficulties = ['Easy', 'Medium', 'Hard']
 selected_difficulty = st.selectbox("Select difficulty level:", difficulties)
 
-# New text input for specific question request
-question_request = st.text_input("Specify the type of question you want (optional):")
+# Start Quiz button (this will be the only option now)
+if st.button("Start Quiz"):
+    st.session_state.quiz_questions = [generate_math_question(selected_topic, selected_difficulty.lower()) for _ in range(5)]
+    st.session_state.current_question_index = 0
+    st.session_state.quiz_score = 0
+    st.session_state.quiz_mode = True
+    st.rerun()
 
-# Quiz mode
-if not st.session_state.quiz_mode:
-    col1, col2 = st.columns(2)
-    with col1:
-        if st.button("Generate Question"):
-            question = generate_math_question(selected_topic, selected_difficulty.lower(), question_request)
-            st.session_state.current_question = question
-            st.write(f"Question ({selected_difficulty}): {question['question']}")
-    with col2:
-        if st.button("Start Quiz"):
-            st.session_state.quiz_questions = [generate_math_question(selected_topic, selected_difficulty.lower()) for _ in range(5)]
-            st.session_state.current_question_index = 0
-            st.session_state.quiz_score = 0
-            st.session_state.quiz_mode = True
-            st.rerun()
-
-    # Answer input for single question mode
-    user_answer = st.text_input("Your answer:")
-
-    # Check answer button for single question mode
-    if st.button("Check Answer"):
-        if 'current_question' in st.session_state:
-            correct_answer = st.session_state.current_question['answer']
-            alternative_answers = st.session_state.current_question['alternative_answers']
-            question = st.session_state.current_question['question']
-            if validate_answer(question, correct_answer, alternative_answers, user_answer):
-                st.success("Correct! Well done!")
-                st.session_state.score_tracker.add_score(selected_topic, True)
-            else:
-                st.error(f"Sorry, that's incorrect. The correct answer is {correct_answer}.")
-                st.session_state.score_tracker.add_score(selected_topic, False)
-        else:
-            st.warning("Please generate a question first.")
-else:
-    # Quiz mode
+if st.session_state.quiz_mode:
     if st.session_state.current_question_index < len(st.session_state.quiz_questions):
         current_question = st.session_state.quiz_questions[st.session_state.current_question_index]
         st.write(f"Question {st.session_state.current_question_index + 1}: {current_question['question']}")
         user_answer = st.text_input("Your answer:", key=f"quiz_answer_{st.session_state.current_question_index}")
 
-        col1, col2 = st.columns(2)
-        with col1:
-            if st.button("Next Question"):
-                if validate_answer(current_question['question'], current_question['answer'], current_question['alternative_answers'], user_answer):
-                    st.success("Correct!")
-                    st.session_state.quiz_score += 1
-                else:
-                    st.error(f"Incorrect. The correct answer was {current_question['answer']}.")
+        if st.button("Submit Answer"):
+            if validate_answer(current_question['question'], current_question['answer'], current_question['alternative_answers'], user_answer):
+                st.success("Correct!")
+                st.session_state.quiz_score += 1
+            else:
+                st.error(f"Incorrect. The correct answer was {current_question['answer']}.")
 
-                st.session_state.current_question_index += 1
-                if st.session_state.current_question_index >= len(st.session_state.quiz_questions):
-                    st.write(f"Quiz completed! Your score: {st.session_state.quiz_score}/{len(st.session_state.quiz_questions)}")
-                    st.session_state.score_tracker.add_score(selected_topic, st.session_state.quiz_score == len(st.session_state.quiz_questions))
-                    st.session_state.quiz_mode = False
-                st.rerun()
-        with col2:
-            if st.button("End Quiz"):
-                st.write(f"Quiz ended. Your score: {st.session_state.quiz_score}/{st.session_state.current_question_index}")
-                st.session_state.score_tracker.add_score(selected_topic, st.session_state.quiz_score == st.session_state.current_question_index)
+            st.session_state.current_question_index += 1
+            if st.session_state.current_question_index >= len(st.session_state.quiz_questions):
+                st.write(f"Quiz completed! Your final score: {st.session_state.quiz_score}/{len(st.session_state.quiz_questions)}")
+                st.session_state.score_tracker.add_score(selected_topic, st.session_state.quiz_score)
                 st.session_state.quiz_mode = False
+            else:
                 st.rerun()
+
+    if st.button("End Quiz"):
+        st.write(f"Quiz ended. Your final score: {st.session_state.quiz_score}/{st.session_state.current_question_index}")
+        st.session_state.score_tracker.add_score(selected_topic, st.session_state.quiz_score)
+        st.session_state.quiz_mode = False
+        st.rerun()
 
 # Display score
 st.subheader("Your Score")
@@ -115,10 +85,9 @@ st.sidebar.header("How to Play")
 st.sidebar.write("""
 1. Select a math topic from the dropdown menu.
 2. Choose a difficulty level.
-3. (Optional) Specify the type of question you want.
-4. Click 'Generate Question' for a single question or 'Start Quiz' for a 5-question quiz.
-5. Type your answer in the text box.
-6. Click 'Check Answer' or 'Next Question' to see if you're correct.
-7. Your score will be updated automatically.
-8. Use 'Reset Scores' to start over.
+3. Click 'Start Quiz' to begin a 5-question quiz.
+4. Type your answer in the text box.
+5. Click 'Submit Answer' to check if you're correct and move to the next question.
+6. Your score will be updated automatically.
+7. Use 'Reset Scores' to start over.
 """)
