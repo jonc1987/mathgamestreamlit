@@ -1,27 +1,29 @@
-import os
-from openai import OpenAI
-
-OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY")
-openai_client = OpenAI(api_key=OPENAI_API_KEY)
+from replit.ai.modelfarm import ChatExample, ChatMessage, ChatModel, ChatSession
 
 def generate_math_question(topic: str) -> dict:
-    prompt = f"Generate a {topic} math question suitable for a quiz. Provide the question and the correct answer. Format the response as a Python dictionary with 'question' and 'answer' keys."
-
+    model = ChatModel("chat-bison")
+    
     try:
-        completion = openai_client.chat.completions.create(
-            model="gpt-3.5-turbo",
-            messages=[{"role": "user", "content": prompt}],
-            max_tokens=150
-        )
-        content = completion.choices[0].message.content
-        if not content:
-            raise ValueError("OpenAI returned an empty response.")
+        response = model.chat([
+            ChatSession(
+                context=f"You are a math teacher generating {topic} questions for a quiz. Provide a question and its answer in a dictionary format with 'question' and 'answer' keys.",
+                examples=[
+                    ChatExample(
+                        input=ChatMessage(content="Generate an addition question"),
+                        output=ChatMessage(content="{'question': 'What is 15 + 27?', 'answer': '42'}")
+                    )
+                ],
+                messages=[
+                    ChatMessage(author="USER", content=f"Generate a {topic} math question"),
+                ],
+            )
+        ], temperature=0.7)
         
-        # Safely evaluate the string as a Python dictionary
+        content = response.responses[0].candidates[0].message.content
         question_dict = eval(content)
         
         if not isinstance(question_dict, dict) or 'question' not in question_dict or 'answer' not in question_dict:
-            raise ValueError("Invalid response format from OpenAI.")
+            raise ValueError("Invalid response format from ModelFarm.")
         
         return question_dict
     except Exception as e:
