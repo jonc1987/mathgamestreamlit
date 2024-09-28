@@ -23,14 +23,18 @@ st.title("AI-Powered Math Quiz")
 topics = ['Addition', 'Subtraction', 'Multiplication', 'Division', 'Algebra', 'Geometry', 'Greatest Common Factor', 'Least Common Multiple', 'Fractions', 'Decimals', 'Percentages', 'Exponents', 'Square Roots', 'Order of Operations']
 selected_topic = st.selectbox("Select a math topic:", topics)
 
+# Difficulty selection
+difficulties = ['Easy', 'Medium', 'Hard']
+selected_difficulty = st.selectbox("Select difficulty level:", difficulties)
+
 # New text input for specific question request
 question_request = st.text_input("Specify the type of question you want (optional):")
 
 # Generate question button
 if st.button("Generate Question"):
-    question = generate_math_question(selected_topic, question_request)
+    question = generate_math_question(selected_topic, selected_difficulty.lower(), question_request)
     st.session_state.current_question = question
-    st.write(f"Question: {question['question']}")
+    st.write(f"Question ({selected_difficulty}): {question['question']}")
 
 # Answer input
 user_answer = st.text_input("Your answer:")
@@ -64,10 +68,11 @@ if st.button("Reset Scores"):
 st.sidebar.header("How to Play")
 st.sidebar.write("""
 1. Select a math topic from the dropdown menu.
-2. (Optional) Specify the type of question you want.
-3. Click 'Generate Question' to get a new question.
-4. Type your answer in the text box.
-5. Click 'Check Answer' to see if you're correct.
-6. Your score will be updated automatically.
-7. Use 'Reset Scores' to start over.
+2. Choose a difficulty level.
+3. (Optional) Specify the type of question you want.
+4. Click 'Generate Question' to get a new question.
+5. Type your answer in the text box.
+6. Click 'Check Answer' to see if you're correct.
+7. Your score will be updated automatically.
+8. Use 'Reset Scores' to start over.
 """)
