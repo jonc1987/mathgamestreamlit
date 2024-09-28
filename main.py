@@ -1,7 +1,13 @@
 import streamlit as st
 import pandas as pd
+import os
 from openai_integration import generate_math_question
 from score_tracker import ScoreTracker
+
+# Check for OpenAI API key
+if not os.environ.get("OPENAI_API_KEY"):
+    st.error("OpenAI API key is missing. Please set the OPENAI_API_KEY environment variable.")
+    st.stop()
 
 # Initialize session state
 if 'score_tracker' not in st.session_state:
