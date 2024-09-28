@@ -60,6 +60,7 @@ def validate_answer(question: str, correct_answer: str, alternative_answers: lis
     response = model.chat([
         ChatSession(
             context=context,
+            examples=[],  # Added this line as requested
             messages=[
                 ChatMessage(author="USER", content=user_message),
             ],
