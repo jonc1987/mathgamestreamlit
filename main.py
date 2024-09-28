@@ -20,6 +20,8 @@ if 'quiz_score' not in st.session_state:
     st.session_state.quiz_score = 0
 if 'quiz_mode' not in st.session_state:
     st.session_state.quiz_mode = False
+if 'attempt' not in st.session_state:
+    st.session_state.attempt = 1
 
 # Set page config
 st.set_page_config(page_title="AI Math Quiz", page_icon="assets/math_icon.svg")
@@ -35,12 +37,19 @@ selected_topic = st.selectbox("Select a math topic:", topics)
 difficulties = ['Easy', 'Medium', 'Hard']
 selected_difficulty = st.selectbox("Select difficulty level:", difficulties)
 
-# Start Quiz button (this will be the only option now)
+# Start Quiz button
 if st.button("Start Quiz"):
-    st.session_state.quiz_questions = [generate_math_question(selected_topic, selected_difficulty.lower()) for _ in range(5)]
+    unique_questions = set()
+    while len(unique_questions) < 5:
+        question = generate_math_question(selected_topic, selected_difficulty.lower())
+        question_key = (question['question'], question['answer'])
+        if question_key not in unique_questions:
+            unique_questions.add(question_key)
+    st.session_state.quiz_questions = list(unique_questions)
     st.session_state.current_question_index = 0
     st.session_state.quiz_score = 0
     st.session_state.quiz_mode = True
+    st.session_state.attempt = 1
     st.rerun()
 
 if st.session_state.quiz_mode:
@@ -53,16 +62,28 @@ if st.session_state.quiz_mode:
             if validate_answer(current_question['question'], current_question['answer'], current_question['alternative_answers'], user_answer):
                 st.success("Correct!")
                 st.session_state.quiz_score += 1
+                st.session_state.current_question_index += 1
+                st.session_state.attempt = 1
+                if st.session_state.current_question_index >= len(st.session_state.quiz_questions):
+                    st.write(f"Quiz completed! Your final score: {st.session_state.quiz_score}/{len(st.session_state.quiz_questions)}")
+                    st.session_state.score_tracker.add_score(selected_topic, st.session_state.quiz_score)
+                    st.session_state.quiz_mode = False
+                else:
+                    st.rerun()
             else:
-                st.error(f"Incorrect. The correct answer was {current_question['answer']}.")
-
-            st.session_state.current_question_index += 1
-            if st.session_state.current_question_index >= len(st.session_state.quiz_questions):
-                st.write(f"Quiz completed! Your final score: {st.session_state.quiz_score}/{len(st.session_state.quiz_questions)}")
-                st.session_state.score_tracker.add_score(selected_topic, st.session_state.quiz_score)
-                st.session_state.quiz_mode = False
-            else:
-                st.rerun()
+                if st.session_state.attempt == 1:
+                    st.error("Incorrect. Try again!")
+                    st.session_state.attempt = 2
+                else:
+                    st.error(f"Incorrect. The correct answer was {current_question['answer']}.")
+                    st.session_state.current_question_index += 1
+                    st.session_state.attempt = 1
+                    if st.session_state.current_question_index >= len(st.session_state.quiz_questions):
+                        st.write(f"Quiz completed! Your final score: {st.session_state.quiz_score}/{len(st.session_state.quiz_questions)}")
+                        st.session_state.score_tracker.add_score(selected_topic, st.session_state.quiz_score)
+                        st.session_state.quiz_mode = False
+                    else:
+                        st.rerun()
 
     if st.button("End Quiz"):
         st.write(f"Quiz ended. Your final score: {st.session_state.quiz_score}/{st.session_state.current_question_index}")
@@ -87,7 +108,8 @@ st.sidebar.write("""
 2. Choose a difficulty level.
 3. Click 'Start Quiz' to begin a 5-question quiz.
 4. Type your answer in the text box.
-5. Click 'Submit Answer' to check if you're correct and move to the next question.
-6. Your score will be updated automatically.
-7. Use 'Reset Scores' to start over.
+5. Click 'Submit Answer' to check if you're correct.
+6. If incorrect, you'll have one more attempt.
+7. Your score will be updated automatically.
+8. Use 'Reset Scores' to start over.
 """)
