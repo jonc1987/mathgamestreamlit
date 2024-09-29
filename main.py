@@ -11,6 +11,9 @@ if not os.environ.get("OPENAI_API_KEY"):
     st.error("OpenAI API key is missing. Please set the OPENAI_API_KEY environment variable.")
     st.stop()
 
+# List of available math types
+math_types = ['Addition', 'Subtraction', 'Multiplication', 'Division', 'Algebra', 'Geometry', 'Greatest Common Factor', 'Least Common Multiple', 'Fractions', 'Decimals', 'Percentages', 'Exponents', 'Square Roots', 'Order of Operations']
+
 # Initialize session state
 if 'score_tracker' not in st.session_state:
     st.session_state.score_tracker = ScoreTracker()
@@ -30,6 +33,8 @@ if 'user_name' not in st.session_state:
     st.session_state.user_name = ""
 if 'start_time' not in st.session_state:
     st.session_state.start_time = None
+if 'selected_math_type' not in st.session_state:
+    st.session_state.selected_math_type = None
 
 # Set page config
 st.set_page_config(page_title="AI Math Quiz", page_icon="assets/math_icon.svg")
@@ -38,8 +43,9 @@ st.set_page_config(page_title="AI Math Quiz", page_icon="assets/math_icon.svg")
 difficulties = ['Easy', 'Medium', 'Hard']
 
 def quiz_setup():
-    st.title("AI-Powered Addition Quiz")
+    st.title("AI-Powered Math Quiz")
     st.session_state.user_name = st.text_input("Enter your name:")
+    st.session_state.selected_math_type = st.selectbox("Select math type:", math_types)
     st.session_state.selected_difficulty = st.selectbox("Select difficulty level:", difficulties)
     if st.button("Start Quiz") and st.session_state.user_name:
         st.session_state.quiz_mode = True
@@ -47,7 +53,7 @@ def quiz_setup():
         st.session_state.quiz_score = 0
         st.session_state.attempt = 1
         st.session_state.start_time = time.time()
-        st.session_state.current_question = generate_math_question('Addition', st.session_state.selected_difficulty.lower())
+        st.session_state.current_question = generate_math_question(st.session_state.selected_math_type, st.session_state.selected_difficulty.lower())
         st.rerun()
 
 if not st.session_state.quiz_mode:
@@ -64,7 +70,7 @@ else:
                 st.session_state.questions_answered += 1
                 st.session_state.attempt = 1
                 if st.session_state.questions_answered < 5:
-                    st.session_state.current_question = generate_math_question('Addition', st.session_state.selected_difficulty.lower())
+                    st.session_state.current_question = generate_math_question(st.session_state.selected_math_type, st.session_state.selected_difficulty.lower())
                 st.rerun()
             else:
                 if st.session_state.attempt == 1:
@@ -75,7 +81,7 @@ else:
                     st.session_state.questions_answered += 1
                     st.session_state.attempt = 1
                     if st.session_state.questions_answered < 5:
-                        st.session_state.current_question = generate_math_question('Addition', st.session_state.selected_difficulty.lower())
+                        st.session_state.current_question = generate_math_question(st.session_state.selected_math_type, st.session_state.selected_difficulty.lower())
                     st.rerun()
 
     if st.session_state.questions_answered >= 5:
@@ -83,7 +89,7 @@ else:
         quiz_time = end_time - st.session_state.start_time
         st.write(f"Quiz completed! Your final score: {st.session_state.quiz_score}/5")
         st.write(f"Time taken: {quiz_time:.2f} seconds")
-        st.session_state.score_tracker.add_score('Addition', st.session_state.quiz_score, st.session_state.user_name, quiz_time)
+        st.session_state.score_tracker.add_score(st.session_state.selected_math_type, st.session_state.quiz_score, st.session_state.user_name, quiz_time)
         st.session_state.quiz_mode = False
 
     if st.button("End Quiz"):
@@ -91,7 +97,7 @@ else:
         quiz_time = end_time - st.session_state.start_time
         st.write(f"Quiz ended. Your final score: {st.session_state.quiz_score}/{st.session_state.questions_answered}")
         st.write(f"Time taken: {quiz_time:.2f} seconds")
-        st.session_state.score_tracker.add_score('Addition', st.session_state.quiz_score, st.session_state.user_name, quiz_time)
+        st.session_state.score_tracker.add_score(st.session_state.selected_math_type, st.session_state.quiz_score, st.session_state.user_name, quiz_time)
         st.session_state.quiz_mode = False
         st.rerun()
 
@@ -114,19 +120,21 @@ if st.button("Reset Scores"):
 st.sidebar.header("How to Play")
 st.sidebar.write("""
 1. Enter your name.
-2. Choose a difficulty level.
-3. Click 'Start Quiz' to begin a 5-question quiz.
-4. Type your answer in the text box.
-5. Click 'Submit Answer' to check if you're correct.
-6. If incorrect, you'll have one more attempt.
-7. Your score and time will be recorded.
-8. Check the leaderboard to see how you rank!
-9. Use 'Reset Scores' to start over.
+2. Select a math type.
+3. Choose a difficulty level.
+4. Click 'Start Quiz' to begin a 5-question quiz.
+5. Type your answer in the text box.
+6. Click 'Submit Answer' to check if you're correct.
+7. If incorrect, you'll have one more attempt.
+8. Your score and time will be recorded.
+9. Check the leaderboard to see how you rank!
+10. Use 'Reset Scores' to start over.
 """)
 
 # Background question generation
 if not st.session_state.quiz_mode:
-    for difficulty in difficulties:
-        if len(st.session_state.question_cache.cache.get(('Addition', difficulty.lower()), [])) < 20:
-            question = generate_math_question('Addition', difficulty.lower())
-            st.session_state.question_cache.add_question('Addition', difficulty.lower(), question)
+    for math_type in math_types:
+        for difficulty in difficulties:
+            if len(st.session_state.question_cache.cache.get((math_type, difficulty.lower()), [])) < 20:
+                question = generate_math_question(math_type, difficulty.lower())
+                st.session_state.question_cache.add_question(math_type, difficulty.lower(), question)
