@@ -21,10 +21,10 @@ if 'quiz_score' not in st.session_state:
     st.session_state.quiz_score = 0
 if 'attempt' not in st.session_state:
     st.session_state.attempt = 1
+if 'current_question' not in st.session_state:
+    st.session_state.current_question = None
 if 'question_cache' not in st.session_state:
     st.session_state.question_cache = QuestionCache()
-if 'quiz_questions' not in st.session_state:
-    st.session_state.quiz_questions = []
 
 # Set page config
 st.set_page_config(page_title="AI Math Quiz", page_icon="assets/math_icon.svg")
@@ -46,39 +46,33 @@ if st.button("Start Quiz"):
     st.session_state.questions_answered = 0
     st.session_state.quiz_score = 0
     st.session_state.attempt = 1
-
-    # Generate 5 unique questions
-    unique_questions = set()
-    while len(unique_questions) < 5:
-        question = generate_math_question(selected_topic, selected_difficulty.lower())
-        question_key = (question['question'], question['answer'])
-        if question_key not in unique_questions:
-            unique_questions.add(question_key)
-
-    st.session_state.quiz_questions = list(unique_questions)
+    st.session_state.current_question = generate_math_question(selected_topic, selected_difficulty.lower())
     st.rerun()
 
 if st.session_state.quiz_mode:
-    if st.session_state.questions_answered < 5:
-        current_question = st.session_state.quiz_questions[st.session_state.questions_answered]
-        st.write(f"Question {st.session_state.questions_answered + 1}: {current_question[0]}")
+    if st.session_state.questions_answered < 5:  # Limit to 5 questions
+        st.write(f"Question {st.session_state.questions_answered + 1}: {st.session_state.current_question['question']}")
         user_answer = st.text_input("Your answer:", key=f"quiz_answer_{st.session_state.questions_answered}")
 
         if st.button("Submit Answer"):
-            if validate_answer(current_question[0], current_question[1], [], user_answer):
+            if validate_answer(st.session_state.current_question['question'], st.session_state.current_question['answer'], st.session_state.current_question['alternative_answers'], user_answer):
                 st.success("Correct!")
                 st.session_state.quiz_score += 1
                 st.session_state.questions_answered += 1
                 st.session_state.attempt = 1
+                if st.session_state.questions_answered < 5:
+                    st.session_state.current_question = generate_math_question(selected_topic, selected_difficulty.lower())
                 st.rerun()
             else:
                 if st.session_state.attempt == 1:
                     st.error("Incorrect. Try again!")
                     st.session_state.attempt = 2
                 else:
-                    st.error(f"Incorrect. The correct answer was {current_question[1]}.")
+                    st.error(f"Incorrect. The correct answer was {st.session_state.current_question['answer']}.")
                     st.session_state.questions_answered += 1
                     st.session_state.attempt = 1
+                    if st.session_state.questions_answered < 5:
+                        st.session_state.current_question = generate_math_question(selected_topic, selected_difficulty.lower())
                     st.rerun()
 
     if st.session_state.questions_answered >= 5:
@@ -96,14 +90,6 @@ if st.session_state.quiz_mode:
 st.subheader("Your Score")
 score_df = st.session_state.score_tracker.get_score_dataframe()
 st.dataframe(score_df)
-
-# Display leaderboard
-st.subheader("Leaderboard")
-leaderboard_df = st.session_state.score_tracker.get_leaderboard()
-if not leaderboard_df.empty:
-    st.dataframe(leaderboard_df)
-else:
-    st.write("No scores available yet. Complete a quiz to see the leaderboard!")
 
 # Reset scores button
 if st.button("Reset Scores"):
