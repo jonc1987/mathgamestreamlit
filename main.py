@@ -46,7 +46,7 @@ if st.button("Start Quiz"):
     st.session_state.questions_answered = 0
     st.session_state.quiz_score = 0
     st.session_state.attempt = 1
-    
+
     # Generate 5 unique questions
     unique_questions = set()
     while len(unique_questions) < 5:
@@ -54,7 +54,7 @@ if st.button("Start Quiz"):
         question_key = (question['question'], question['answer'])
         if question_key not in unique_questions:
             unique_questions.add(question_key)
-    
+
     st.session_state.quiz_questions = list(unique_questions)
     st.rerun()
 
