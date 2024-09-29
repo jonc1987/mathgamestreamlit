@@ -45,7 +45,6 @@ def generate_math_question_modelfarm(topic: str, difficulty: str, question_reque
                 if any(keyword in question_dict['question'].lower() for keyword in topic_keywords):
                     return question_dict
             
-            print(f'Attempt {attempt + 1}: Invalid response format or unrelated question')
         except Exception as e:
             print(f'Attempt {attempt + 1}: Error - {str(e)}')
     

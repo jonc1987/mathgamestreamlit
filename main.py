@@ -4,7 +4,6 @@ import os
 import time
 from openai_integration import generate_math_question, validate_answer
 from score_tracker import ScoreTracker
-from question_cache import QuestionCache
 
 # Check for OpenAI API key
 if not os.environ.get("OPENAI_API_KEY"):
@@ -25,10 +24,6 @@ if 'quiz_score' not in st.session_state:
     st.session_state.quiz_score = 0
 if 'attempt' not in st.session_state:
     st.session_state.attempt = 1
-if 'current_question' not in st.session_state:
-    st.session_state.current_question = None
-if 'question_cache' not in st.session_state:
-    st.session_state.question_cache = QuestionCache()
 if 'user_name' not in st.session_state:
     st.session_state.user_name = ""
 if 'start_time' not in st.session_state:
@@ -37,7 +32,7 @@ if 'selected_math_type' not in st.session_state:
     st.session_state.selected_math_type = None
 
 # Set page config
-st.set_page_config(page_title="AI Math Quiz", page_icon="assets/math_icon.svg")
+st.set_page_config(page_title="AI Math Quiz", page_icon="generated-icon.png")
 
 # Difficulty selection
 difficulties = ['Easy', 'Medium', 'Hard']
@@ -53,35 +48,31 @@ def quiz_setup():
         st.session_state.quiz_score = 0
         st.session_state.attempt = 1
         st.session_state.start_time = time.time()
-        st.session_state.current_question = generate_math_question(st.session_state.selected_math_type, st.session_state.selected_difficulty.lower())
         st.rerun()
 
 if not st.session_state.quiz_mode:
     quiz_setup()
 else:
-    if st.session_state.questions_answered < 5:  # Limit to 5 questions
-        st.write(f"Question {st.session_state.questions_answered + 1}: {st.session_state.current_question['question']}")
+    if st.session_state.questions_answered < 5:
+        current_question = generate_math_question(st.session_state.selected_math_type, st.session_state.selected_difficulty.lower())
+        st.write(f"Question {st.session_state.questions_answered + 1}: {current_question['question']}")
         user_answer = st.text_input("Your answer:", key=f"quiz_answer_{st.session_state.questions_answered}")
 
         if st.button("Submit Answer"):
-            if validate_answer(st.session_state.current_question['question'], st.session_state.current_question['answer'], st.session_state.current_question['alternative_answers'], user_answer):
+            if validate_answer(current_question['question'], current_question['answer'], current_question['alternative_answers'], user_answer):
                 st.success("Correct!")
                 st.session_state.quiz_score += 1
                 st.session_state.questions_answered += 1
                 st.session_state.attempt = 1
-                if st.session_state.questions_answered < 5:
-                    st.session_state.current_question = generate_math_question(st.session_state.selected_math_type, st.session_state.selected_difficulty.lower())
                 st.rerun()
             else:
                 if st.session_state.attempt == 1:
                     st.error("Incorrect. Try again!")
                     st.session_state.attempt = 2
                 else:
-                    st.error(f"Incorrect. The correct answer was {st.session_state.current_question['answer']}.")
+                    st.error(f"Incorrect. The correct answer was {current_question['answer']}.")
                     st.session_state.questions_answered += 1
                     st.session_state.attempt = 1
-                    if st.session_state.questions_answered < 5:
-                        st.session_state.current_question = generate_math_question(st.session_state.selected_math_type, st.session_state.selected_difficulty.lower())
                     st.rerun()
 
     if st.session_state.questions_answered >= 5:
@@ -130,11 +121,3 @@ st.sidebar.write("""
 9. Check the leaderboard to see how you rank!
 10. Use 'Reset Scores' to start over.
 """)
-
-# Background question generation
-if not st.session_state.quiz_mode:
-    for math_type in math_types:
-        for difficulty in difficulties:
-            if len(st.session_state.question_cache.cache.get((math_type, difficulty.lower()), [])) < 20:
-                question = generate_math_question(math_type, difficulty.lower())
-                st.session_state.question_cache.add_question(math_type, difficulty.lower(), question)
